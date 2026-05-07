@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { socket } from '../socket';
+import { getKioskName } from '../kioskDefs';
 
 function Dashboard() {
   const [scans, setScans] = useState([]);
@@ -37,7 +38,10 @@ function Dashboard() {
             <div>
               {Object.entries(kiosks).map(([id, info]) => (
                 <div key={id} className="kiosk-status-card">
-                  <span style={{ fontWeight: 600 }}>{id}</span>
+                  <div>
+                    <span style={{ fontWeight: 600 }}>{getKioskName(id)}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{id}</span>
+                  </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <span className={`badge ${info.isOnline ? 'success' : 'offline'}`}>
                       {info.isOnline ? 'Online' : 'Offline'}
@@ -63,7 +67,7 @@ function Dashboard() {
                   <div>
                     <div style={{ fontWeight: 600 }}>Fob: {scan.fobID}</div>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                      Kiosk: {scan.kioskID} &bull; {new Date(scan.timestamp).toLocaleTimeString()}
+                      {getKioskName(scan.kioskID)} &bull; {new Date(scan.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
                   <span className={`badge ${scan.isValid ? 'success' : 'error'}`}>

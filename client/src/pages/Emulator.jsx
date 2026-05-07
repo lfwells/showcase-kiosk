@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { getAllKiosks, getKioskName } from '../kioskDefs';
 
 function Emulator() {
   const [fobID, setFobID] = useState('');
   const [kioskID, setKioskID] = useState('');
   const [result, setResult] = useState(null);
+
+  const kiosks = getAllKiosks();
 
   const handleScan = async (e) => {
     e.preventDefault();
@@ -41,16 +44,21 @@ function Emulator() {
         </div>
         
         <div className="form-group">
-          <label htmlFor="kioskID">Kiosk ID</label>
-          <input
+          <label htmlFor="kioskID">Kiosk</label>
+          <select
             id="kioskID"
-            type="text"
             className="form-control"
             value={kioskID}
             onChange={(e) => setKioskID(e.target.value)}
             required
-            placeholder="e.g. kiosk1"
-          />
+          >
+            <option value="" disabled>Select a kiosk…</option>
+            {kiosks.map(([id, def]) => (
+              <option key={id} value={id}>
+                {def.name} ({id})
+              </option>
+            ))}
+          </select>
         </div>
         
         <button type="submit" className="btn">Simulate Scan</button>

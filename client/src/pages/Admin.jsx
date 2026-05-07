@@ -1,37 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getAllKiosks } from '../kioskDefs';
 
 function Admin() {
-  const [kioskId, setKioskId] = useState('');
   const navigate = useNavigate();
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (kioskId.trim()) {
-      navigate(`/kiosk/${kioskId}`);
-    }
-  };
+  const kiosks = getAllKiosks();
 
   return (
-    <div className="card" style={{ maxWidth: '400px', margin: '4rem auto' }}>
+    <div className="card" style={{ maxWidth: '500px', margin: '4rem auto' }}>
       <h1 className="title">Kiosk Admin</h1>
-      <p className="subtitle">Select a Kiosk ID to begin display</p>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="kioskId">Kiosk ID</label>
-          <input
-            id="kioskId"
-            type="text"
-            className="form-control"
-            value={kioskId}
-            onChange={(e) => setKioskId(e.target.value)}
-            placeholder="e.g. kiosk1"
-            required
-          />
-        </div>
-        <button type="submit" className="btn" style={{ width: '100%' }}>Launch Kiosk</button>
-      </form>
+      <p className="subtitle">Select a kiosk to launch its display</p>
+
+      <div className="kiosk-select-list">
+        {kiosks.map(([id, def]) => (
+          <button
+            key={id}
+            id={`launch-${id}`}
+            className="kiosk-select-item"
+            onClick={() => navigate(`/kiosk/${id}`)}
+          >
+            <div className="kiosk-select-info">
+              <span className="kiosk-select-name">{def.name}</span>
+              <span className="kiosk-select-id">{id}</span>
+            </div>
+            <div className="kiosk-select-arrow">→</div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

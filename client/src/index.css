@@ -170,3 +170,75 @@ body {
   border-radius: 8px;
   margin-bottom: 0.5rem;
 }
+
+/* Kiosk selection list (Admin page) */
+.kiosk-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.kiosk-select-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+}
+
+.kiosk-select-item:hover {
+  background-color: rgba(79, 70, 229, 0.15);
+  border-color: var(--primary-color);
+  transform: translateX(4px);
+}
+
+.kiosk-select-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kiosk-select-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.kiosk-select-id {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.kiosk-select-arrow {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.kiosk-select-item:hover .kiosk-select-arrow {
+  color: var(--primary-color);
+  transform: translateX(4px);
+}
+
+/* Select dropdown styling */
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}
+
+select.form-control option {
+  background-color: #1e293b;
+  color: white;
+}
+
