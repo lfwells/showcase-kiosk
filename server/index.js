@@ -49,7 +49,7 @@ io.on('connection', (socket) => {
   socket.on('register_kiosk', (kioskId) => {
     socket.kioskId = kioskId;
     activeConnections[socket.id] = kioskId;
-    
+
     // Ensure kiosk exists in db
     const kiosks = getKiosks();
     if (!kiosks[kioskId]) {
@@ -57,7 +57,7 @@ io.on('connection', (socket) => {
     }
     kiosks[kioskId].isOnline = true;
     saveKiosks(kiosks);
-    
+
     io.emit('kiosks_update', getKiosks());
     console.log(`Kiosk ${kioskId} registered`);
   });
@@ -65,11 +65,11 @@ io.on('connection', (socket) => {
   socket.on('kiosk_status_update', ({ kioskId, isValid }) => {
     const kiosks = getKiosks();
     if (!kiosks[kioskId]) {
-        kiosks[kioskId] = {};
+      kiosks[kioskId] = {};
     }
     kiosks[kioskId].isValid = isValid;
     saveKiosks(kiosks);
-    
+
     io.emit('kiosks_update', getKiosks());
     console.log(`Kiosk ${kioskId} status updated to valid: ${isValid}`);
   });
@@ -91,14 +91,14 @@ io.on('connection', (socket) => {
 // API Endpoints
 app.post('/api/scan', (req, res) => {
   const { fobID, kioskID } = req.body;
-  
+
   if (!fobID || !kioskID) {
     return res.status(400).json({ error: 'Missing fobID or kioskID' });
   }
 
   const kiosks = getKiosks();
   const kiosk = kiosks[kioskID] || { isValid: false, isOnline: false };
-  
+
   const scanRecord = {
     fobID,
     kioskID,
@@ -112,7 +112,7 @@ app.post('/api/scan', (req, res) => {
 
   // Emit to everyone so dashboard updates
   io.emit('scans_update', scans);
-  
+
   // Also emit a specific event for that kiosk if it's listening
   io.emit(`scan_result_${kioskID}`, scanRecord);
 
@@ -125,6 +125,33 @@ app.get('/api/scans', (req, res) => {
 
 app.get('/api/kiosks', (req, res) => {
   res.json(getKiosks());
+});
+
+//a post endpoint that can change the state of a kiosk to valid
+app.post('/api/kiosk/:kioskId/validate', (req, res) => {
+  const { kioskId } = req.params;
+  const kiosks = getKiosks();
+  if (kiosks[kioskId]) {
+    kiosks[kioskId].isValid = true;
+    saveKiosks(kiosks);
+    io.emit('kiosks_update', getKiosks());
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: 'Kiosk not found' });
+  }
+});
+//a post endpoint that can change the state of a kiosk to invalid
+app.post('/api/kiosk/:kioskId/invalidate', (req, res) => {
+  const { kioskId } = req.params;
+  const kiosks = getKiosks();
+  if (kiosks[kioskId]) {
+    kiosks[kioskId].isValid = false;
+    saveKiosks(kiosks);
+    io.emit('kiosks_update', getKiosks());
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: 'Kiosk not found' });
+  }
 });
 
 // Serve frontend if in production
