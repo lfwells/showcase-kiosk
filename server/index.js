@@ -129,6 +129,7 @@ app.get('/api/kiosks', (req, res) => {
 
 //a post endpoint that can change the state of a kiosk to valid
 app.post('/api/kiosk/:kioskId/validate', (req, res) => {
+  console.log('Validating kiosk:', req.params.kioskId);
   const { kioskId } = req.params;
   const kiosks = getKiosks();
   if (kiosks[kioskId]) {
@@ -142,6 +143,7 @@ app.post('/api/kiosk/:kioskId/validate', (req, res) => {
 });
 //a post endpoint that can change the state of a kiosk to invalid
 app.post('/api/kiosk/:kioskId/invalidate', (req, res) => {
+  console.log('Invalidating kiosk:', req.params.kioskId);
   const { kioskId } = req.params;
   const kiosks = getKiosks();
   if (kiosks[kioskId]) {
