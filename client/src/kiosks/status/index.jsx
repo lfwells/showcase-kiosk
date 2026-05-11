@@ -1,179 +1,292 @@
 import React, { useState, useEffect } from 'react';
-import { getInteractiveKiosks, getKioskName } from '../../kioskDefs';
+import { getInteractiveKiosks } from '../../kioskDefs';
 
 export default function StatusKiosk({ kioskId, socket }) {
-  const [fobScans, setFobScans] = useState(null); // null = waiting for scan
+  const [fobScans, setFobScans] = useState(null);
   const [fobID, setFobID] = useState(null);
   const [allScans, setAllScans] = useState([]);
+  const [hasEntered, setHasEntered] = useState(false);
+
+  // Prize Draw Form State
+  const [formData, setFormData] = useState({ firstName: '', schoolName: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    // Mark status kiosk as always valid (any scan is accepted)
     socket.emit('kiosk_status_update', { kioskId, isValid: true });
 
-    // Fetch all scans once to have the data ready
     fetch('/api/scans')
       .then(res => res.json())
       .then(setAllScans)
       .catch(console.error);
 
-    // Keep scans up to date via socket
     const handleScansUpdate = (scans) => setAllScans(scans);
     socket.on('scans_update', handleScansUpdate);
 
-    // Listen for scans on this kiosk
     const handleScan = (e) => {
       const scan = e.detail;
       setFobID(scan.fobID);
+      // Assume the scan event or initial data tells us if they've already entered
+      setHasEntered(scan.enteredDraw || false);
     };
 
     window.addEventListener('kiosk_scan', handleScan);
-
     return () => {
       window.removeEventListener('kiosk_scan', handleScan);
       socket.off('scans_update', handleScansUpdate);
     };
   }, [kioskId, socket]);
 
-  // When fobID changes (a scan happened), compute the status from allScans
   useEffect(() => {
     if (!fobID) return;
-
     const interactiveKiosks = getInteractiveKiosks();
-
     const statusMap = interactiveKiosks.map(([id, def]) => {
-      // Check if there's at least one valid scan for this fob at this kiosk
       const hasValidScan = allScans.some(
         scan => scan.fobID === fobID && scan.kioskID === id && scan.isValid
       );
       return { kioskId: id, name: def.name, completed: hasValidScan };
     });
-
     setFobScans(statusMap);
   }, [fobID, allScans]);
 
-  // Auto-reset after 15 seconds
+  // Handle Form Submission
+  const handleDrawEntry = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/enterDraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fobID,
+          firstName: formData.firstName,
+          schoolName: formData.schoolName
+        }),
+      });
+      if (response.ok) {
+        setSubmitted(true);
+        setHasEntered(true);
+      }
+    } catch (err) {
+      console.error("Draw entry failed", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Auto-reset timer (extended to 30s if they are typing)
+  // Auto-reset timer
   useEffect(() => {
     if (!fobID) return;
+
+    // If they have submitted, reset quickly (e.g., 5 seconds) 
+    // If they are typing, don't reset.
+    // If they are just looking at results, reset in 15s.
+    const delay = submitted ? 5000 : (formData.firstName.length > 0 ? 60000 : 15000);
+
     const timer = setTimeout(() => {
       setFobID(null);
       setFobScans(null);
-    }, 15000);
+      setFormData({ firstName: '', schoolName: '' });
+      setSubmitted(false);
+      setHasEntered(false); // Reset for the next student
+    }, delay);
+
     return () => clearTimeout(timer);
-  }, [fobID]);
+  }, [fobID, formData.firstName, submitted]);
 
   const completedCount = fobScans ? fobScans.filter(k => k.completed).length : 0;
   const totalCount = fobScans ? fobScans.length : 0;
+  const isFullyComplete = completedCount === totalCount && totalCount > 0;
 
   return (
     <div style={styles.container}>
-      {/* Background gradient overlay */}
       <div style={styles.bgOverlay} />
 
       {!fobID ? (
         <div style={styles.waitingContainer}>
-          <div style={styles.pulseRing} />
+          {/* ... existing waiting UI ... */}
           <div style={styles.iconContainer}>
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="6" width="20" height="12" rx="2" />
-              <path d="M12 12h.01" />
-              <path d="M17 12h.01" />
-              <path d="M7 12h.01" />
-            </svg>
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M12 12h.01M17 12h.01M7 12h.01" /></svg>
           </div>
           <h1 style={styles.waitingTitle}>Scan Your Fob</h1>
-          <p style={styles.waitingSubtitle}>Hold your fob to the reader to check your progress</p>
+          <p style={styles.waitingSubtitle}>Check your progress and enter the draw to win a prize!</p>
         </div>
       ) : (
         <div style={styles.resultContainer}>
           <div style={styles.header}>
-            <h1 style={styles.resultTitle}>
-              Fob Status
-            </h1>
-            <p style={styles.fobLabel}>
-              <span style={styles.fobBadge}>{fobID}</span>
-            </p>
+            <h1 style={styles.resultTitle}>Fob Status</h1>
+            <p style={styles.fobLabel}><span style={styles.fobBadge}>{fobID}</span></p>
             <div style={styles.progressBarOuter}>
-              <div
-                style={{
-                  ...styles.progressBarInner,
-                  width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`,
-                }}
-              />
+              <div style={{ ...styles.progressBarInner, width: `${(completedCount / totalCount) * 100}%` }} />
             </div>
             <p style={styles.progressText}>
               {completedCount} of {totalCount} kiosks completed
             </p>
           </div>
 
-          <div style={styles.kioskGrid}>
-            {fobScans && fobScans.map((kiosk) => (
-              <div
-                key={kiosk.kioskId}
-                style={{
-                  ...styles.kioskCard,
-                  borderColor: kiosk.completed ? '#10b981' : '#334155',
-                  backgroundColor: kiosk.completed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.6)',
-                }}
-              >
-                <div style={styles.kioskCardIcon}>
-                  {kiosk.completed ? (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                  ) : (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="15" y1="9" x2="9" y2="15" />
-                      <line x1="9" y1="9" x2="15" y2="15" />
-                    </svg>
-                  )}
-                </div>
-                <div style={styles.kioskCardText}>
-                  <span style={{
-                    ...styles.kioskName,
-                    color: kiosk.completed ? '#f0fdf4' : '#94a3b8',
-                  }}>
-                    {kiosk.name}
-                  </span>
-                  <span style={{
-                    ...styles.kioskStatus,
-                    color: kiosk.completed ? '#10b981' : '#475569',
-                  }}>
-                    {kiosk.completed ? 'Completed ✓' : 'Not yet visited'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+          {!isFullyComplete ? (
+            <div style={styles.kioskGrid}>
 
-          {completedCount === totalCount && totalCount > 0 && (
-            <div style={styles.completeBanner}>
-              <span style={{ fontSize: '2rem' }}>🎉</span>
-              <span style={styles.completeText}>All kiosks completed!</span>
+              {fobScans && fobScans.map((kiosk) => (
+
+                <div
+
+                  key={kiosk.kioskId}
+
+                  style={{
+
+                    ...styles.kioskCard,
+
+                    borderColor: kiosk.completed ? '#10b981' : '#334155',
+
+                    backgroundColor: kiosk.completed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.6)',
+
+                  }}
+
+                >
+
+                  <div style={styles.kioskCardIcon}>
+
+                    {kiosk.completed ? (
+
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+
+                        <polyline points="22 4 12 14.01 9 11.01" />
+
+                      </svg>
+
+                    ) : (
+
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+
+                        <circle cx="12" cy="12" r="10" />
+
+                        <line x1="15" y1="9" x2="9" y2="15" />
+
+                        <line x1="9" y1="9" x2="15" y2="15" />
+
+                      </svg>
+
+                    )}
+
+                  </div>
+
+                  <div style={styles.kioskCardText}>
+
+                    <span style={{
+
+                      ...styles.kioskName,
+
+                      color: kiosk.completed ? '#f0fdf4' : '#94a3b8',
+
+                    }}>
+
+                      {kiosk.name}
+
+                    </span>
+
+                    <span style={{
+
+                      ...styles.kioskStatus,
+
+                      color: kiosk.completed ? '#10b981' : '#475569',
+
+                    }}>
+
+                      {kiosk.completed ? 'Completed ✓' : 'Not yet visited'}
+
+                    </span>
+
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
+          ) : (
+            <div style={styles.drawContainer}>
+              {hasEntered || submitted ? (
+                <div style={styles.completeBanner}>
+                  <span style={{ fontSize: '2rem' }}>🏆</span>
+                  <span style={styles.completeText}>You're in the draw! Good luck!</span>
+                </div>
+              ) : (
+                <form onSubmit={handleDrawEntry} style={styles.form}>
+                  <h2 style={styles.formTitle}>🎉 All Done! Enter the Prize Draw</h2>
+                  <input
+                    required
+                    style={styles.input}
+                    placeholder="First Name"
+                    value={formData.firstName}
+                    onChange={e => setFormData({ ...formData, firstName: e.target.value })}
+                  />
+                  <input
+                    required
+                    style={styles.input}
+                    placeholder="School Name"
+                    value={formData.schoolName}
+                    onChange={e => setFormData({ ...formData, schoolName: e.target.value })}
+                  />
+                  <button type="submit" disabled={isSubmitting} style={styles.button}>
+                    {isSubmitting ? 'Entering...' : 'Enter Competition'}
+                  </button>
+                </form>
+              )}
             </div>
           )}
-
-          <p style={styles.resetHint}>This screen will reset in 15 seconds</p>
+          <p style={styles.resetHint}>Screen resets when you walk away</p>
         </div>
       )}
-
-      <style>{`
-        @keyframes pulse-ring {
-          0% { transform: scale(0.8); opacity: 0.6; }
-          50% { transform: scale(1.2); opacity: 0; }
-          100% { transform: scale(0.8); opacity: 0.6; }
-        }
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }
 
 const styles = {
+  // ... existing styles ...
+  drawContainer: {
+    width: '100%',
+    padding: '2rem',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    borderRadius: '16px',
+    border: '2px solid #4f46e5',
+    boxShadow: '0 0 40px rgba(79, 70, 229, 0.3)',
+    animation: 'fade-in-up 0.5s ease-out',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  formTitle: {
+    color: 'white',
+    fontSize: '1.5rem',
+    marginBottom: '1rem',
+    textAlign: 'center',
+  },
+  input: {
+    padding: '12px',
+    borderRadius: '8px',
+    border: '1px solid #334155',
+    backgroundColor: '#0f172a',
+    color: 'white',
+    fontSize: '1rem',
+  },
+  button: {
+    padding: '14px',
+    borderRadius: '8px',
+    border: 'none',
+    backgroundColor: '#4f46e5',
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+  },
+
   container: {
     height: '100vh',
     display: 'flex',
@@ -333,5 +446,13 @@ const styles = {
     marginTop: '2rem',
     color: 'rgba(255,255,255,0.3)',
     fontSize: '0.85rem',
+  },
+  successState: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    padding: '2rem',
+    gap: '1rem',
   },
 };

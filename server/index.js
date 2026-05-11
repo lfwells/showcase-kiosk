@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { getInteractiveKiosks } = require('../client/src/kioskDefs');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,6 +23,7 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, '../data');
 const SCANS_FILE = path.join(DATA_DIR, 'scans.json');
 const KIOSKS_FILE = path.join(DATA_DIR, 'kiosks.json');
+const DRAW_ENTRIES_FILE = path.join(DATA_DIR, 'draw_entries.json');
 
 // Ensure data dir and files exist
 if (!fs.existsSync(DATA_DIR)) {
@@ -39,6 +41,8 @@ const getScans = () => JSON.parse(fs.readFileSync(SCANS_FILE, 'utf8'));
 const saveScans = (data) => fs.writeFileSync(SCANS_FILE, JSON.stringify(data, null, 2));
 const getKiosks = () => JSON.parse(fs.readFileSync(KIOSKS_FILE, 'utf8'));
 const saveKiosks = (data) => fs.writeFileSync(KIOSKS_FILE, JSON.stringify(data, null, 2));
+const getDrawEntries = () => JSON.parse(fs.readFileSync(DRAW_ENTRIES_FILE, 'utf8'));
+const saveDrawEntries = (data) => fs.writeFileSync(DRAW_ENTRIES_FILE, JSON.stringify(data, null, 2));
 
 // In-memory tracker for connected kiosks to mark them online/offline
 const activeConnections = {};
@@ -96,6 +100,13 @@ app.post('/api/scan', (req, res) => {
     return res.status(400).json({ error: 'Missing fobID or kioskID' });
   }
 
+  //at this point, work out if this fob has entered the draw
+  const drawEntries = getDrawEntries();
+  const hasEnteredDraw = drawEntries.some((entry) => entry.fobID === fobID);
+  if (hasEnteredDraw) {
+    return res.status(400).json({ error: 'Fob has already entered the draw' });
+  }
+
   const kiosks = getKiosks();
   const kiosk = kiosks[kioskID] || { isValid: false, isOnline: false };
 
@@ -116,7 +127,7 @@ app.post('/api/scan', (req, res) => {
   // Also emit a specific event for that kiosk if it's listening
   io.emit(`scan_result_${kioskID}`, scanRecord);
 
-  res.json({ success: true, scan: scanRecord });
+  res.json({ success: true, scan: scanRecord, isValid: kiosk.isValid });
 });
 
 app.get('/api/scans', (req, res) => {
@@ -175,6 +186,31 @@ app.get('/api/progress/:fobID', (req, res) => {
   const scans = getScans();
   const userScans = scans.filter((scan) => scan.fobID === fobID);
   res.json(userScans);
+});
+
+//an endpoint to enter the draw to win a prize
+app.post('/api/enterDraw', (req, res) => {
+  const { fobID } = req.body;
+  const scans = getScans();
+  const userScans = scans.filter((scan) => scan.fobID === fobID && scan.isValid == true);
+  let success = false;
+  const interactiveKiosksCount = getInteractiveKiosks().length;
+  if (userScans.length >= interactiveKiosksCount) {
+    success = true;
+  }
+
+  const DRAW_ENTRIES_FILE = path.join(DATA_DIR, 'draw_entries.json');
+
+  if (!fs.existsSync(DRAW_ENTRIES_FILE)) {
+    fs.writeFileSync(DRAW_ENTRIES_FILE, '[]');
+  }
+
+  const drawEntries = getDrawEntries();
+  if (success) {
+    drawEntries.push({ fobID, timestamp: new Date().toISOString(), ...req.body });
+    saveDrawEntries(drawEntries);
+  }
+  res.json({ success });
 });
 
 // Serve frontend if in production
