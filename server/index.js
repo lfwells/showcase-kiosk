@@ -152,7 +152,7 @@ app.post('/kiosk/appweb/validate', (req, res) => {
 });
 
 //a post endpoint that can change the state of a kiosk to valid
-app.post('/api/kiosk/:kioskId/validate', (req, res) => {
+app.post('/kiosk/:kioskId/validate', (req, res) => {
   console.log('Validating kiosk:', req.params.kioskId);
   const { kioskId } = req.params;
   const kiosks = getKiosks();
@@ -160,6 +160,21 @@ app.post('/api/kiosk/:kioskId/validate', (req, res) => {
     kiosks[kioskId].isValid = true;
     saveKiosks(kiosks);
     io.emit('kiosks_update', getKiosks());
+    io.emit('kiosk_' + kioskId + '_validated'); // A custom event specifically for the appweb component
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: 'Kiosk not found' });
+  }
+});
+app.get('/kiosk/:kioskId/validate', (req, res) => {
+  console.log('Validating kiosk:', req.params.kioskId);
+  const { kioskId } = req.params;
+  const kiosks = getKiosks();
+  if (kiosks[kioskId]) {
+    kiosks[kioskId].isValid = true;
+    saveKiosks(kiosks);
+    io.emit('kiosks_update', getKiosks());
+    io.emit('kiosk_' + kioskId + '_validated'); // A custom event specifically for the appweb component
     res.json({ success: true });
   } else {
     res.status(404).json({ error: 'Kiosk not found' });
@@ -213,9 +228,31 @@ app.post('/api/enterDraw', (req, res) => {
   res.json({ success });
 });
 
-// Serve frontend if in production
+// Serve frontend and Unity builds
 const CLIENT_BUILD_PATH = path.join(__dirname, '../client/dist');
-app.use(express.static(CLIENT_BUILD_PATH));
+
+app.use(express.static(CLIENT_BUILD_PATH, {
+  setHeaders: (res, filePath) => {
+    // 1. Handle Gzip decompression headers for Unity
+    if (filePath.endsWith('.gz')) {
+      res.set('Content-Encoding', 'gzip');
+    }
+
+    // 2. Map the correct Content-Types for compressed Unity files
+    // This ensures the browser knows how to execute the decompressed content
+    if (filePath.endsWith('.js.gz')) {
+      res.set('Content-Type', 'application/javascript');
+    } else if (filePath.endsWith('.wasm.gz')) {
+      res.set('Content-Type', 'application/wasm');
+    } else if (filePath.endsWith('.data.gz')) {
+      res.set('Content-Type', 'application/octet-stream');
+    } else if (filePath.endsWith('.symbols.json.gz')) {
+      res.set('Content-Type', 'application/json');
+    }
+  }
+}));
+
+// Fallback for React Router (Single Page Application support)
 app.use((req, res) => {
   res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html'));
 });
