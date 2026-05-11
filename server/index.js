@@ -169,6 +169,14 @@ app.post('/api/kiosk/:kioskId/invalidate', (req, res) => {
   }
 });
 
+//an endpoint that will display the user's progress
+app.get('/api/progress/:fobID', (req, res) => {
+  const { fobID } = req.params;
+  const scans = getScans();
+  const userScans = scans.filter((scan) => scan.fobID === fobID);
+  res.json(userScans);
+});
+
 // Serve frontend if in production
 const CLIENT_BUILD_PATH = path.join(__dirname, '../client/dist');
 app.use(express.static(CLIENT_BUILD_PATH));

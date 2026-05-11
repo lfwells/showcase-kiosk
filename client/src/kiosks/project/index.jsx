@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ScanProgress from '../../ScanProgress';
 
-export default function Kiosk2({ kioskId, socket }) {
+export default function ProjectKiosk({ kioskId, socket }) {
   useEffect(() => {
-    // Kiosk 2 logic: Always valid, just counts scans
     socket.emit('kiosk_status_update', { kioskId, isValid: true });
   }, [kioskId, socket]);
 

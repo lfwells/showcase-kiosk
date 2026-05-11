@@ -4,12 +4,14 @@ import Admin from './pages/Admin';
 import Kiosk from './pages/Kiosk';
 import Dashboard from './pages/Dashboard';
 import Emulator from './pages/Emulator';
+import Progress from './pages/Progress';
 import './index.css';
 
 function Navigation() {
   const location = useLocation();
   // Hide nav on the actual kiosk displays
   if (location.pathname.startsWith('/kiosk/')) return null;
+  if (location.pathname.startsWith('/progress/')) return null;
 
   return (
     <nav className="nav">
@@ -30,6 +32,7 @@ function App() {
           <Route path="/kiosk/:id" element={<Kiosk />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/emulator" element={<Emulator />} />
+          <Route path="/progress/:fobID/*" element={<Progress />} />
         </Routes>
       </div>
     </Router>

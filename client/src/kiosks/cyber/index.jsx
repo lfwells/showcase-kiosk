@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ScanProgress from '../../ScanProgress';
 
 export default function CyberKiosk({ kioskId, socket }) {
   const [isValid, setIsValid] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [lastScan, setLastScan] = useState(null);
   const timerRef = useRef(null);
 
   const [outputCode, setOutputCode] = useState('');
@@ -60,16 +60,6 @@ export default function CyberKiosk({ kioskId, socket }) {
 
   useEffect(() => {
     init();
-  }, []);
-
-  useEffect(() => {
-    // Listen for scans just to display them
-    const handleScan = (e) => {
-      setLastScan(e.detail);
-    };
-
-    window.addEventListener('kiosk_scan', handleScan);
-    return () => window.removeEventListener('kiosk_scan', handleScan);
   }, []);
 
   useEffect(() => {
@@ -214,14 +204,8 @@ export default function CyberKiosk({ kioskId, socket }) {
         <div id="cypherSubmit"><input type="button" value="Check" onClick={() => checkResult()} /></div>
       </div>
 
-      {lastScan && (
-        <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc' }}>
-          <h4>Last Scan</h4>
-          <p>Fob: {lastScan.fobID}</p>
-          <p>Result: {lastScan.isValid ? 'Success' : 'Fail'}</p>
-        </div>
-      )}
 
+      <ScanProgress socket={socket} kioskId={kioskId} />
 
     </div>
   );

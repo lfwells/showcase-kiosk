@@ -1,11 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ScanProgress from '../../ScanProgress';
 
-export default function AppWebKiosk({ kioskId, socket }) {
+export default function AIKiosk({ kioskId, socket }) {
   const [isValid, setIsValid] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef(null);
 
+  function init() {
+
+  }
+
+  useEffect(() => {
+    init();
+  }, []);
 
   useEffect(() => {
     // Listen for the custom event from the server when the hidden endpoint is hit
@@ -31,6 +38,7 @@ export default function AppWebKiosk({ kioskId, socket }) {
       // Time is up, invalidate
       setIsValid(false);
       socket.emit('kiosk_status_update', { kioskId, isValid: false });
+      init();
     }
 
     return () => {
@@ -38,9 +46,12 @@ export default function AppWebKiosk({ kioskId, socket }) {
     };
   }, [timeLeft, isValid, kioskId, socket]);
 
+
+
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>Application and Web Development Kiosk</h1>
+
+      <h1>Artificial Intelligence Kiosk</h1>
       <p>This kiosk is currently <strong>{isValid ? 'VALID' : 'INVALID'}</strong>.</p>
 
       {isValid ? (
@@ -56,7 +67,11 @@ export default function AppWebKiosk({ kioskId, socket }) {
         </div>
       )}
 
+
+
+
       <ScanProgress socket={socket} kioskId={kioskId} />
+
     </div>
   );
 }
