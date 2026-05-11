@@ -7,8 +7,14 @@
  *   - 'status'       – the special status kiosk that shows a fob's progress
  */
 const KIOSK_DEFS = {
-  kiosk1: { name: 'Trivia Challenge', type: 'interactive' },
-  kiosk2: { name: 'Information Desk', type: 'interactive' },
+  //kiosk1: { name: 'Trivia Challenge', type: 'interactive' },
+  //kiosk2: { name: 'Information Desk', type: 'interactive' },
+  appweb: { name: 'Application and Web Development Challenge', type: 'interactive' },
+  games: { name: 'Games and Creative Technologies Challenge', type: 'interactive' },
+  cyber: { name: 'Cybersecurity Challenge', type: 'interactive' },
+  ai: { name: 'Artificial Intelligence Challenge', type: 'interactive' },
+  iot: { name: 'Internet of Things Challenge', type: 'interactive' },
+  project: { name: 'Project Showcase', type: 'interactive' },
   status: { name: 'Fob Status Check', type: 'status' },
 };
 
