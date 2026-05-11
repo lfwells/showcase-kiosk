@@ -9,6 +9,7 @@
 const KIOSK_DEFS = {
   kiosk1: { name: 'Trivia Challenge', type: 'interactive' },
   kiosk2: { name: 'Information Desk', type: 'interactive' },
+  appweb: { name: 'AppWeb Hack Challenge', type: 'interactive' },
   status: { name: 'Fob Status Check', type: 'status' },
 };
 

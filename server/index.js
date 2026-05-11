@@ -127,6 +127,19 @@ app.get('/api/kiosks', (req, res) => {
   res.json(getKiosks());
 });
 
+//a post endpoint for appweb kiosk
+app.post('/kiosk/appweb/validate', (req, res) => {
+  console.log('Validating appweb kiosk via secret endpoint!');
+  const kioskId = 'appweb';
+  const kiosks = getKiosks();
+  if (!kiosks[kioskId]) kiosks[kioskId] = {};
+  kiosks[kioskId].isValid = true;
+  saveKiosks(kiosks);
+  io.emit('kiosks_update', getKiosks());
+  io.emit('kiosk_appweb_validated'); // A custom event specifically for the appweb component
+  res.json({ success: true, message: "Kiosk 'appweb' is now valid for 20 seconds." });
+});
+
 //a post endpoint that can change the state of a kiosk to valid
 app.post('/api/kiosk/:kioskId/validate', (req, res) => {
   console.log('Validating kiosk:', req.params.kioskId);
