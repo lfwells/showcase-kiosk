@@ -106,9 +106,6 @@ export default function StatusKiosk({ kioskId, socket }) {
       {!fobID ? (
         <div style={styles.waitingContainer}>
           {/* ... existing waiting UI ... */}
-          <div style={styles.iconContainer}>
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M12 12h.01M17 12h.01M7 12h.01" /></svg>
-          </div>
           <h1 style={styles.waitingTitle}>Scan Your Fob</h1>
           <p style={styles.waitingSubtitle}>Check your progress and enter the draw to win a prize!</p>
         </div>
@@ -140,7 +137,7 @@ export default function StatusKiosk({ kioskId, socket }) {
 
                     borderColor: kiosk.completed ? '#10b981' : '#334155',
 
-                    backgroundColor: kiosk.completed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.6)',
+                    backgroundColor: kiosk.completed ? 'rgba(16, 185, 129, 0.1)' : 'white',
 
                   }}
 
@@ -180,7 +177,7 @@ export default function StatusKiosk({ kioskId, socket }) {
 
                       ...styles.kioskName,
 
-                      color: kiosk.completed ? '#f0fdf4' : '#94a3b8',
+                      color: kiosk.completed ? 'black' : 'black',
 
                     }}>
 
@@ -262,7 +259,7 @@ const styles = {
     gap: '1rem',
   },
   formTitle: {
-    color: 'white',
+    color: 'black',
     fontSize: '1.5rem',
     marginBottom: '1rem',
     textAlign: 'center',
@@ -271,8 +268,8 @@ const styles = {
     padding: '12px',
     borderRadius: '8px',
     border: '1px solid #334155',
-    backgroundColor: '#0f172a',
-    color: 'white',
+    backgroundColor: '#ffffffff',
+    color: 'black',
     fontSize: '1rem',
   },
   button: {
@@ -293,7 +290,6 @@ const styles = {
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
     position: 'relative',
     overflow: 'hidden',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -334,12 +330,12 @@ const styles = {
   waitingTitle: {
     fontSize: '3rem',
     fontWeight: 700,
-    color: 'white',
+    color: 'black',
     margin: '0 0 0.5rem 0',
   },
   waitingSubtitle: {
     fontSize: '1.25rem',
-    color: 'rgba(255,255,255,0.5)',
+    color: 'black',
     margin: 0,
   },
   resultContainer: {
@@ -360,14 +356,14 @@ const styles = {
   resultTitle: {
     fontSize: '2.5rem',
     fontWeight: 700,
-    color: 'white',
+    color: 'black',
     margin: '0 0 0.75rem 0',
   },
   fobLabel: {
     margin: '0 0 1.5rem 0',
   },
   fobBadge: {
-    display: 'inline-block',
+    display: 'none',//'inline-block',
     padding: '0.4rem 1.2rem',
     borderRadius: '9999px',
     backgroundColor: 'rgba(99, 102, 241, 0.2)',
@@ -392,7 +388,7 @@ const styles = {
   },
   progressText: {
     margin: 0,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'black',
     fontSize: '0.95rem',
   },
   kioskGrid: {
@@ -434,7 +430,6 @@ const styles = {
     marginTop: '1.5rem',
     padding: '1rem 2rem',
     borderRadius: '12px',
-    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.1))',
     border: '1px solid rgba(16, 185, 129, 0.3)',
   },
   completeText: {
