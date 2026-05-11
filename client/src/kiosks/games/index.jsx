@@ -51,7 +51,7 @@ export default function GamesKiosk({ kioskId, socket }) {
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
 
-      <h1>Artificial Intelligence Kiosk</h1>
+      <h1>Games and Creative Technologies Kiosk</h1>
       <p>This kiosk is currently <strong>{isValid ? 'VALID' : 'INVALID'}</strong>.</p>
 
       {isValid ? (

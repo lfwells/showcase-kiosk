@@ -65,6 +65,7 @@ function Kiosk() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <DynamicKiosk kioskId={id} socket={socket} />
+      <div className="logo"><div className="logo-bg"></div></div>
     </Suspense>
   );
 }
