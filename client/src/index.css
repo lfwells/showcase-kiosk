@@ -255,3 +255,20 @@ select.form-control option {
   background-repeat: no-repeat;
   background-position: bottom;
 }
+
+
+
+.sentence {
+  margin: 20px;
+  font-size: 35px;
+  font-weight: bold;
+}
+
+.input {
+  margin: 20px;
+  width: 200px;
+  font-size: 50px;
+  font-family: 'Courier New', Courier, monospace;
+  width: 20em;
+  text-align: center;
+}
