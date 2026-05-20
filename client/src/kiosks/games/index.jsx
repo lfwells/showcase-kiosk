@@ -44,24 +44,35 @@ export default function GamesKiosk({ kioskId, socket }) {
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      
-      <KioskStatus 
-        isValid={isValid} 
+
+      <KioskStatus
+        isValid={isValid}
         title="Games and Creative Technologies Kiosk"
+        desc="Complete 3 holes to unlock kiosk"
       >
-        <div style={{ width: '100%', maxWidth: '1000px', margin: '20px auto', display: 'flex', justifyContent: 'center' }}>
-          <iframe 
-            src="/build_web/index.html" 
-            style={{
-              width: "100%",
-              aspectRatio: "16 / 9",
-              border: "none",
-              borderRadius: "16px",
-              boxShadow: "0 12px 40px rgba(0, 0, 0, 0.35)",
-            }}
-          ></iframe>
-        </div>
+
       </KioskStatus>
+      <div style={{
+        width: '100%',
+        //maxWidth: '1000px', 
+        margin: '20px auto',
+        display: 'flex',
+        justifyContent: 'center',
+        position: "absolute",
+        left: "0px",
+        marginTop: "-100px"
+      }}>
+        <iframe
+          src="/build_web/index.html"
+          style={{
+            width: "100%",
+            aspectRatio: "16 / 9",
+            border: "none",
+            borderRadius: "16px",
+            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.35)",
+          }}
+        ></iframe>
+      </div>
 
       <ScanProgress socket={socket} kioskId={kioskId} />
 
