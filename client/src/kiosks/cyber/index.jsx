@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ScanProgress from '../../ScanProgress';
+import KioskStatus from '../../components/KioskStatus';
 
 export default function CyberKiosk({ kioskId, socket }) {
   const [isValid, setIsValid] = useState(false);
@@ -182,31 +183,26 @@ export default function CyberKiosk({ kioskId, socket }) {
         }
       `}
       </style>
-      <h1>Networks and Cybersecurity Kiosk</h1>
-      <p>This kiosk is currently <strong>{isValid ? 'VALID' : 'INVALID'}</strong>.</p>
-
-      {isValid ? (
-        <div>
-          <h2 style={{ color: 'green' }}>Access Granted!</h2>
-          <h3>Time remaining: {timeLeft}s</h3>
-          <p>Scan as many fobs as you like before time runs out!</p>
+      
+      <KioskStatus 
+        isValid={isValid} 
+        timeLeft={timeLeft} 
+        title="Networks and Cybersecurity Kiosk"
+      >
+        <div id="cyberChallenge">
+          <div id="output">{outputCode}</div>
+          <div id="cypherInput">
+            <input type="range" min="0" max="25" value={inputCypher} onChange={handleInputChange} /> {inputCypher}
+          </div>
+          <div id="cypherSubmit">
+            <input type="button" value="Check" onClick={() => checkResult()} />
+          </div>
         </div>
-      ) : (
-        <div>
-          <h2 style={{ color: 'red' }}>Access Denied</h2>
-          <p>Find a way to unlock this kiosk...</p>
-        </div>
-      )}
-
-      <div id="cyberChallenge">
-        <div id="output">{outputCode}</div>
-        <div id="cypherInput"><input type="range" min="0" max="25" value={inputCypher} onChange={handleInputChange} /> {inputCypher}</div>
-        <div id="cypherSubmit"><input type="button" value="Check" onClick={() => checkResult()} /></div>
-      </div>
-
+      </KioskStatus>
 
       <ScanProgress socket={socket} kioskId={kioskId} />
 
     </div>
   );
 }
+

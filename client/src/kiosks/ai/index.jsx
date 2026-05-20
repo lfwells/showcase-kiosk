@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ScanProgress from '../../ScanProgress';
+import KioskStatus from '../../components/KioskStatus';
 
 export default function AIKiosk({ kioskId, socket }) {
   const [isValid, setIsValid] = useState(false);
@@ -50,28 +51,15 @@ export default function AIKiosk({ kioskId, socket }) {
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-
-      <h1>Artificial Intelligence Kiosk</h1>
-      <p>This kiosk is currently <strong>{isValid ? 'VALID' : 'INVALID'}</strong>.</p>
-
-      {isValid ? (
-        <div>
-          <h2 style={{ color: 'green' }}>Access Granted!</h2>
-          <h3>Time remaining: {timeLeft}s</h3>
-          <p>Scan as many fobs as you like before time runs out!</p>
-        </div>
-      ) : (
-        <div>
-          <h2 style={{ color: 'red' }}>Access Denied</h2>
-          <p>Find a way to unlock this kiosk...</p>
-        </div>
-      )}
-
-
-
+      <KioskStatus 
+        isValid={isValid} 
+        timeLeft={timeLeft} 
+        title="Artificial Intelligence Kiosk" 
+      />
 
       <ScanProgress socket={socket} kioskId={kioskId} />
 
     </div>
   );
 }
+

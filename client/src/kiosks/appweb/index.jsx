@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ScanProgress from '../../ScanProgress';
+import KioskStatus from '../../components/KioskStatus';
 
 export default function AppWebKiosk({ kioskId, socket }) {
   const [isValid, setIsValid] = useState(false);
@@ -40,23 +41,15 @@ export default function AppWebKiosk({ kioskId, socket }) {
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>Application and Web Development Kiosk</h1>
-      <p>This kiosk is currently <strong>{isValid ? 'VALID' : 'INVALID'}</strong>.</p>
-
-      {isValid ? (
-        <div>
-          <h2 style={{ color: 'green' }}>Access Granted!</h2>
-          <h3>Time remaining: {timeLeft}s</h3>
-          <p>Scan as many fobs as you like before time runs out!</p>
-        </div>
-      ) : (
-        <div>
-          <h2 style={{ color: 'red' }}>Access Denied</h2>
-          <p>Find a way to unlock this kiosk...</p>
-        </div>
-      )}
+      <KioskStatus
+        isValid={isValid}
+        timeLeft={timeLeft}
+        title="Application and Web Development Kiosk"
+        desc={<div><p>See if you can find a way to unlock this kiosk.</p><p><strong>Hint, you may need to 'inspect' it.</strong></p></div>}
+      />
 
       <ScanProgress socket={socket} kioskId={kioskId} />
     </div>
   );
 }
+
