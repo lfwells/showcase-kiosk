@@ -10,6 +10,7 @@ export default function AIKiosk({ kioskId, socket }) {
   function init() {
     var s = selectRandomSentence();
     setSentence(s);
+    setUserInput("");
     console.log("for cheating, correct answer is", result(s).join(","), s);
   }
 
