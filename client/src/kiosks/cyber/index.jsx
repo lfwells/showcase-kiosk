@@ -7,56 +7,136 @@ export default function CyberKiosk({ kioskId, socket }) {
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef(null);
 
-  const [outputCode, setOutputCode] = useState('');
-  const [inputCypher, setInputCypher] = useState('0');
+  const [cipherText, setCipherText] = useState("");
+  const [plainText, setPlainText] = useState("");
+  const [decryptedText, setDecryptedText] = useState("");
+  const [inputText, setInputText] = useState("");
+
+  const [w, setW] = useState(7);
+  const [h, setH] = useState(4);
+
+  const [columnOrder, setColumnOrder] = useState([4, 3, 1, 2, 5, 6, 7]);
+
+  function decryptText(cipherText, width, height, order) {
+    const matrix = [];
+    let index = 0;
+
+    // Build the matrix column by column (reading the cipher text)
+    for (let i = 0; i < width; i++) {
+      matrix[i] = [];
+      for (let j = 0; j < height; j++) {
+        matrix[i][j] = cipherText[index];
+        index++;
+      }
+    }
+
+    let result = "";
+
+    // Reconstruct the plaintext by reading row by row according to the original order
+    for (let i = 0; i < width * height; i++) {
+      // Determine the original column index and map it to the matrix
+      const colIndex = order[i % width] - 1;
+      const rowIndex = Math.floor(i / width);
+
+      let char = matrix[colIndex][rowIndex];
+
+      // Fallback to lowercase 'x' to match the encryption padding
+      if (char === undefined || char === null) {
+        char = "x";
+      }
+
+      result += char;
+    }
+
+    return result;
+  }
+
+  function encryptText(plainText, width, height, order) {
+    let plain = plainText.replaceAll(" ", "");//normaliseText(plaintext);
+    const needed = width * height;
+
+    // Truncate if the string is longer than the grid size
+    if (plain.length > needed) {
+      plain = plain.substring(0, needed);
+    }
+
+    // Pad with 'x' to fill the grid (PHP's str_pad pads to the right by default)
+    plain = plain.padEnd(needed, "x");
 
 
-  const [key, setKey] = useState('');
-  const [rotatedNumber, setRotatedNumber] = useState(0);
-  const words = [
-    "apple",
-    "banana",
-    "cherry",
-    "date",
-    "elderberry",
-    "fig",
-    "grape",
-    "honeydew",
-    "kiwi",
-    "lemon",
-    "mango",
-    "nectarine",
-    "orange",
-    "papaya",
-    "quince",
-    "raspberry",
-    "strawberry",
-    "tangerine",
-    "ugli",
-    "watermelon",
-    "cantaloupe",
-    "guava",
-    "lime",
-    "pineapple",
-    "strawberry"
+    const grid = [];
+    let pos = 0;
+
+    // Populate the 2D grid
+    for (let row = 0; row < height; row++) {
+      grid[row] = []; // Explicitly initialize the inner array in JS
+      for (let col = 0; col < width; col++) {
+        grid[row][col] = plain[pos++];
+      }
+    }
+    console.log({ grid, plain });
+
+    let cipher = "";
+
+    // Read columns based on the order sequence
+    for (let n = 1; n <= width; n++) {
+      const col = order.indexOf(n);
+      for (let row = 0; row < height; row++) {
+        cipher += grid[row][col];
+      }
+    }
+
+    return cipher;
+  }
+
+  const phrases = [
+    "attack postponed until two am",
+    "update your software",
+    "use strong passwords",
+    "turn on multifactor authentication",
+    "think before you click",
+    "back up important files",
+    "lock your screen",
+    "check the sender first",
+    "do not reuse passwords",
+    "report suspicious emails",
+    "protect your personal data",
+    "use a password manager",
+    "verify before you trust"
   ];
 
+
+
   function init() {
-    // 1. Generate local values
-    let number = Math.round(Math.random() * 25);
-    let randomIndex = Math.floor(Math.random() * words.length);
-    let word = words[randomIndex];
+    var randomIndex = Math.floor(Math.random() * phrases.length);
+    const sentence = phrases[randomIndex];
+    // 1. Clean the sentence (matching your encryptText logic)
+    const plainText = sentence.replaceAll(" ", "");
 
-    // 2. Update state for later use in the UI
-    setRotatedNumber(number);
-    setKey(word);
-    setInputCypher("0");
+    // 2. Pick a random width (e.g., between 4 and 8)
+    const minWidth = 4;
+    const maxWidth = 8;
+    const width = Math.floor(Math.random() * (maxWidth - minWidth + 1)) + minWidth;
 
-    // 3. Use the LOCAL 'word' and 'number', not the state versions
-    const rotated = rotate(word, number);
-    setOutputCode(rotated);
+    // 3. Calculate the exact height needed to hold the string
+    const height = Math.ceil(plainText.length / width);
 
-    console.log({ word, number, rotated });
+    // 4. Generate an array from 1 to 'width' [1, 2, 3...]
+    const order = Array.from({ length: width }, (_, i) => i + 1);
+
+    // 5. Shuffle the order array randomly (Fisher-Yates shuffle)
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+
+    setW(width);
+    setH(height);
+    setColumnOrder(order);
+
+    console.log("for cheating: ", encryptText(sentence, width, height, order));
+    setPlainText(sentence);
+    setCipherText(encryptText(sentence, width, height, order));
   }
 
   useEffect(() => {
@@ -96,6 +176,23 @@ export default function CyberKiosk({ kioskId, socket }) {
   }, [timeLeft, isValid, kioskId, socket]);
 
   function handleInputChange(event) {
+    let value = event.target.value;
+    setInputText(value);
+
+    value = value.toLowerCase();
+    value = value.replaceAll(" ", "");
+    let decrypt = encryptText(value, w, h, columnOrder);
+    setDecryptedText(decrypt);
+    if (value.toLowerCase().replaceAll(" ", "") == plainText.toLowerCase().replaceAll(" ", "")) {
+      setIsValid(true);
+      setTimeLeft(20);
+      socket.emit('kiosk_status_update', { kioskId, isValid: true });
+
+      //attackpostedponeduntiltwoam
+      //attackpostponeduntiltwoam
+    }
+    return;
+    //old one for now
     setInputCypher(event.target.value);
     var number = parseInt(event.target.value);
     if (number == undefined || isNaN(number)) number = 0;
@@ -106,6 +203,7 @@ export default function CyberKiosk({ kioskId, socket }) {
   }
 
   function checkResult() {
+
     var userGuess = parseInt(inputCypher);
     if (isNaN(userGuess)) userGuess = 0;
 
@@ -162,16 +260,20 @@ export default function CyberKiosk({ kioskId, socket }) {
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
       <style>{`
         #cyberChallenge #output {
-          font-size: 48pt;
+          font-size: 32pt;
+          font-family: 'Courier New', Courier, monospace;
+          text-align: center;
+          letter-spacing: 2pt;
           padding: 5px 10px;
           border-radius: 5px;
           color: var(--accent);
           background: var(--accent-bg);
-          border: 2px solid transparent;
+          border: 2px solid black;
           transition: border-color 0.3s;
           margin-bottom: 24px;
           font-family: Courier;
           letter-spacing: 0.5em;
+          margin-top:1em;
         }
 
         #cypherInput input {
@@ -181,24 +283,27 @@ export default function CyberKiosk({ kioskId, socket }) {
         #cypherSubmit {
           padding:1em;
         }
+
+        code { font-size:32pt }
       `}
       </style>
-      
-      <KioskStatus 
-        isValid={isValid} 
-        timeLeft={timeLeft} 
+
+      <KioskStatus
+        isValid={isValid}
+        timeLeft={timeLeft}
         title="Networks and Cybersecurity Kiosk"
+        desc="Complete the Challenge to Unlock the Kiosk"
       >
-        <div id="cyberChallenge">
-          <div id="output">{outputCode}</div>
-          <div id="cypherInput">
-            <input type="range" min="0" max="25" value={inputCypher} onChange={handleInputChange} /> {inputCypher}
-          </div>
-          <div id="cypherSubmit">
-            <input type="button" value="Check" onClick={() => checkResult()} />
-          </div>
-        </div>
       </KioskStatus>
+
+      <div id="cyberChallenge">
+        <div><strong>Ciper Text:</strong></div>
+        <div className="cipherText">{cipherText}</div>
+        <div><strong>W</strong>: <code>{w}</code> <strong>H</strong>: <code>{h}</code> <strong>Column Order</strong>: <code>{columnOrder.join(", ")}</code></div>
+
+        <div><textarea id="output" className="inputText" value={inputText} onChange={handleInputChange} rows="3" placeholder='Enter Secret Message' /></div>
+        <div className="cipherText">{decryptedText}</div>
+      </div>
 
       <ScanProgress socket={socket} kioskId={kioskId} />
 
