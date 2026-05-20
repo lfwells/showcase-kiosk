@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ScanProgress from '../../ScanProgress';
+import KioskStatus from '../../components/KioskStatus';
 
 export default function GamesKiosk({ kioskId, socket }) {
   const [isValid, setIsValid] = useState(false);
@@ -43,22 +44,28 @@ export default function GamesKiosk({ kioskId, socket }) {
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-
-      <h1>Games and Creative Technologies Kiosk</h1>
-      <p>This kiosk is currently <strong>{isValid ? 'VALID' : 'INVALID'}</strong>.</p>
-
-
-      <iframe src="/build_web/index.html" style={{
-        marginLeft: "0em",
-        width: "100vw",
-        aspectRatio: "16 / 9",
-        border: "0",
-        left: 0,
-        position: "absolute"
-      }}></iframe>
+      
+      <KioskStatus 
+        isValid={isValid} 
+        title="Games and Creative Technologies Kiosk"
+      >
+        <div style={{ width: '100%', maxWidth: '1000px', margin: '20px auto', display: 'flex', justifyContent: 'center' }}>
+          <iframe 
+            src="/build_web/index.html" 
+            style={{
+              width: "100%",
+              aspectRatio: "16 / 9",
+              border: "none",
+              borderRadius: "16px",
+              boxShadow: "0 12px 40px rgba(0, 0, 0, 0.35)",
+            }}
+          ></iframe>
+        </div>
+      </KioskStatus>
 
       <ScanProgress socket={socket} kioskId={kioskId} />
 
     </div>
   );
 }
+
