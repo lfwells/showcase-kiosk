@@ -31,7 +31,7 @@ export default function ScanProgress({ kioskId, socket }) {
                 <div style={{ width: "75vw", height: "25vh" }}>
                     <iframe
                         key={lastScan.timestamp} // Force refresh on every new scan
-                        src={`/progress/${lastScan.fobID}/${lastScan.timestamp}`}
+                        src={`/progress/${lastScan.fobID}#${lastScan.timestamp}`}
                         width="100%"
                         height="100%"
                         frameBorder="0"

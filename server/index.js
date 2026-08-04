@@ -166,16 +166,11 @@ app.post('/kiosk/:kioskId/validate', (req, res) => {
     res.status(404).json({ error: 'Kiosk not found' });
   }
 });
-app.get('/kiosk/:kioskId/validate', (req, res) => {
-  console.log('Validating kiosk:', req.params.kioskId);
+app.get('/kiosk/:kioskId/check', (req, res) => {
   const { kioskId } = req.params;
   const kiosks = getKiosks();
   if (kiosks[kioskId]) {
-    kiosks[kioskId].isValid = true;
-    saveKiosks(kiosks);
-    io.emit('kiosks_update', getKiosks());
-    io.emit('kiosk_' + kioskId + '_validated'); // A custom event specifically for the appweb component
-    res.json({ success: true });
+    res.json({ isValid: kiosks[kioskId].isValid });
   } else {
     res.status(404).json({ error: 'Kiosk not found' });
   }
@@ -199,8 +194,16 @@ app.post('/api/kiosk/:kioskId/invalidate', (req, res) => {
 app.get('/api/progress/:fobID', (req, res) => {
   const { fobID } = req.params;
   const scans = getScans();
-  const userScans = scans.filter((scan) => scan.fobID === fobID);
-  res.json(userScans);
+  const userScans = scans.filter((scan) => scan.fobID === fobID && scan.isValid == true && scan.kioskID != 'status');
+  //only show the first scan for each kiosk, in case they scanned multiple times
+  const uniqueKioskScans = {};
+  userScans.forEach((scan) => {
+    if (!uniqueKioskScans[scan.kioskID]) {
+      uniqueKioskScans[scan.kioskID] = scan;
+    }
+  });
+  const progress = Object.values(uniqueKioskScans);
+  res.json(progress);
 });
 
 //an endpoint to enter the draw to win a prize

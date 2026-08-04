@@ -7,6 +7,63 @@ function Progress() {
     const fetchProgress = async () => {
         const pathParts = window.location.pathname.split('/');
         const fobID = pathParts.pop() || pathParts.pop();
+        
+        try {   
+            const res = await fetch('/api/progress/' + fobID, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const data = await res.json();
+            setResult(data);
+            handleAutoHide();
+        } catch (err) {
+            console.error(err);
+            setResult(null);
+        }
+    };
+    
+    const handleAutoHide = () => {
+        const params = new URLSearchParams(window.location.search);
+        const timeout = parseInt(params.get('timeout')) || 5000;
+        setTimeout(() => {
+            if (document.body) {
+                document.body.style.display = "none";
+            }
+        }, timeout);
+    };
+    
+    useEffect(() => {
+        fetchProgress();
+    }, []);
+
+    const kiosks = getInteractiveKiosks();
+    
+    if (result == null) return null;
+    let goToFinalKiosk = <p></p>;
+    if ( result.length >= kiosks.length ) {
+        goToFinalKiosk = (
+            <div style={{ marginTop: '20px', padding: '10px', border: '2px solid green', borderRadius: '8px' }}>
+                <h4>Congratulations! You've completed all kiosks!</h4>
+                <p>Visit the final kiosk to enter the prize draw.</p>
+            </div>
+        );
+    };
+    return (
+        <div>
+            <h1 style={{ fontSize: '2em', textAlign: 'center' }}> {result.length} of {kiosks.length} Kiosks Visited</h1>
+            {goToFinalKiosk}
+        </div>
+    );
+}
+
+export default Progress;
+
+function ProgressOld() {
+    const [result, setResult] = useState(null);
+
+    const fetchProgress = async () => {
+        const pathParts = window.location.pathname.split('/');
+        const fobID = pathParts.pop() || pathParts.pop();
 
         try {
             const res = await fetch('/api/progress/' + fobID, {
@@ -185,4 +242,4 @@ function Progress() {
     );
 }
 
-export default Progress;
+//export default Progress;

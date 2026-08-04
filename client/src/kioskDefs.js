@@ -14,7 +14,7 @@ const KIOSK_DEFS = {
   cyber: { name: 'Cybersecurity Challenge', type: 'interactive' },
   ai: { name: 'Artificial Intelligence Challenge', type: 'interactive' },
   iot: { name: 'Internet of Things Challenge', type: 'interactive' },
-  project: { name: 'Project Showcase', type: 'interactive' },
+  //project: { name: 'Project Showcase', type: 'interactive' },
   status: { name: 'Fob Status Check', type: 'status' },
 };
 
